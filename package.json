@@ -1,0 +1,39 @@
+{
+  "name": "books-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js",
+    "start-prod": "node server.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix",
+    "format": "prettier --write './**/*.{js,jsx,ts,tsx,css,md,json}' --config ./.prettierc",
+    "swagger": "node ./swagger.js"
+  },
+  "keywords": [],
+  "author": "Laurels Echichinwo",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-server-express": "^3.12.0",
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-graphql": "^0.12.0",
+    "express-validator": "^7.0.1",
+    "graphql": "^15.8.0",
+    "mongodb": "^5.5.0",
+    "mongoose": "^7.2.0",
+    "swagger-ui-express": "^4.6.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.41.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "faker": "^5.5.3",
+    "nodemon": "^2.0.22",
+    "prettier": "^2.8.8",
+    "swagger-autogen": "^2.23.1"
+  }
+}
