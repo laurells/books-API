@@ -1,14 +1,15 @@
 const { Book } = require('../models/book');
 const { createRandomBook } = require('../controller/bookController');
-const connectDB = require('../database/db');
+// const connectDB = require('../database/db');
 
 const resolvers = {
     Query: {
         books: async () => {
             try {
                 // await connectDB.connect();
-                const db = connectDB.getDb().db('Book-Manager'); // Replace with your database name
-                const books = await db.collection('books').find().toArray();
+                // const db = connectDB.getDb().db('Book-Manager'); // Replace with your database name
+                // const books = await db.collection('books').find().toArray();
+                const books = await Book.find();
                 return books;
             } catch (error) {
                 console.error('Error retrieving books', error);

@@ -5,3 +5,7 @@ GET http://localhost:3000/books
 GET  http://localhost:3000/books/6468ce35ccdf24173ba6955a
 ###
 GET http://localhost:3000/api-docs
+### Render
+POST https://codewithrels.onrender.com/book-generator
+###
+GET https://codewithrels.onrender.com/api-docs

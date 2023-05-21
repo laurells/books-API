@@ -10,7 +10,7 @@ const swaggerOptions = {
         description: 'API documentation for the Book Management API',
       },
     },
-    host: 'localhost:3000', // Specify the host where the API is running
+    host: 'codewithrels.onrender.com', // Specify the host where the API is running
     schemes: ['https'], // Specify the schemes used for the API (e.g., http, https)
   };
 
