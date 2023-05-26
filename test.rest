@@ -2,10 +2,22 @@ POST http://localhost:3000/book-generator
 ###
 GET http://localhost:3000/books
 ###
-GET  http://localhost:3000/books/6468ce35ccdf24173ba6955a
+POST  http://localhost:3000/graphql
 ###
 GET http://localhost:3000/api-docs
 ### Render
 POST https://codewithrels.onrender.com/book-generator
-###
-GET https://codewithrels.onrender.com/api-docs
+###Retrieves all books from the database.
+GET /books
+### Retrieves a specific book by its ID from the database.
+GET /book/:id
+### Creates a new book in the database.
+POST /book 
+### Updates an existing book in the database.
+PUT /book/:id 
+###  Deletes a book from the database.
+DELETE /book/:id
+### Creates a random book using the createRandomBook function.
+POST /book/random
+### Saves user data to the database.
+POST /user

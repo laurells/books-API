@@ -1,0 +1,44 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+  <title>GraphQL Webpage</title>
+  <script src="https://cdn.jsdelivr.net/npm/apollo-boost@0.4.7/dist/apollo-boost.min.js"></script>
+  <script>
+    // Create an instance of ApolloClient
+    const client = new ApolloClient({
+      uri: 'http://localhost:3000/graphql', // Replace with your GraphQL server URL
+    });
+
+    // Define a GraphQL query
+    const GET_BOOKS_QUERY = gql`
+      query {
+        books {
+          title
+          author
+        }
+      }
+    `;
+
+    // Use ApolloClient to send the query and handle the response
+    client.query({
+      query: GET_BOOKS_QUERY
+    }).then(result => {
+      const books = result.data.books;
+
+      // Render the books on the webpage
+      const booksContainer = document.getElementById('books-container');
+      books.forEach(book => {
+        const bookElement = document.createElement('div');
+        bookElement.textContent = `${book.title} - ${book.author}`;
+        booksContainer.appendChild(bookElement);
+      });
+    }).catch(error => {
+      console.error('Error retrieving books', error);
+    });
+  </script>
+</head>
+<body>
+  <h1>Books</h1>
+  <div id="books-container"></div>
+</body>
+</html> -->

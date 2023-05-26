@@ -1,16 +1,27 @@
 const express = require('express');
 const { connectDB } = require('./database/db');
-const { setupGraphQL } = require('./graphql/graphqlServer');
+const { setupGraphQL, generateAPIDocs } = require('./graphql/graphqlServer');
 const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
 const router = require('./routes');
+// const { auth } = require('express-openid-connect');
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
+// const config = {
+//   authRequired: false,
+//   auth0Logout: true,
+//   secret: process.env.SECRET,
+//   baseURL: process.env.BASEURL,
+//   clientID: process.env.CLIENTID,
+//   issuerBaseURL: process.env.ISSUER
+// };
+
 app.use(bodyParser.json());
+// app.use(auth(config))
 app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -38,10 +49,16 @@ connectDB((err) => {
 
   // Set up GraphQL API
   setupGraphQL(app);
+ 
+
 
   setTimeout(() => {
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);
+      generateAPIDocs();
+      
+      // console.log(`GraphQL endpoint: http://localhost:${port}${server}`);
     });
   }, 2000); // Adjust the delay as needed
+  
 });

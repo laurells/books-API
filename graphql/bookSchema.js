@@ -9,10 +9,15 @@ const typeDefs = gql`
     genre: String!
     isbn: String!
   }
+  type User {
+    user_id: ID!
+    user_name: String!
+  }
 
   type Query {
     books: [Book!]!
     book(id: ID!): Book
+    isAuthorized: Boolean!
   }
 
   type Mutation {
@@ -33,6 +38,7 @@ const typeDefs = gql`
     ): Book
     deleteBook(id: ID!): Book
     createRandomBook: Book!
+    saveUserData: User!
   }
 `;
 
