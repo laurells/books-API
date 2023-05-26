@@ -50,6 +50,7 @@ const server = new ApolloServer({
 
   // Disable persisted queries
   persistedQueries: false,
+  introspection: true,
 
   // Set up the context object with the request
   context: ({ req }) => ({ req }),
