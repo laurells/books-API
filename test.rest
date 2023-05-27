@@ -1,23 +1,26 @@
-POST http://localhost:3000/book-generator
+GET http://localhost:3000/graphql?query={books{id title author publicationYear genre isbn}}
 ###
-GET http://localhost:3000/books
+GET http://localhost:3000/graphql?query=query($id: ID!){book(id: $id){id title author}}&variables={"id": "6468b40c269f04c2ffaea739"}
 ###
-POST  http://localhost:3000/graphql
+POST http://localhost:3000/graphql
+Content-Type: application/json
+
+{
+  "query": "mutation { createBook(title: \"New Book\", author: \"John Doe\", publicationYear: 2022, genre: \"Fiction\", isbn: \"123456789\") { id title author publicationYear genre isbn } }"
+}
 ###
-GET http://localhost:3000/api-docs
+POST http://localhost:3000/graphql
+Content-Type: application/json
+
+{
+  "query": "mutation { updateBook(id: \"6468b40c269f04c2ffaea739\", title: \"Updated Book\", author: \"Jane Doe\") { id title author publicationYear genre isbn } }"
+}
+
+
 ### Render
-POST https://codewithrels.onrender.com/book-generator
-###Retrieves all books from the database.
-GET /books
-### Retrieves a specific book by its ID from the database.
-GET /book/:id
-### Creates a new book in the database.
-POST /book 
-### Updates an existing book in the database.
-PUT /book/:id 
-###  Deletes a book from the database.
-DELETE /book/:id
-### Creates a random book using the createRandomBook function.
-POST /book/random
-### Saves user data to the database.
-POST /user
+POST http://localhost:3000/graphql
+Content-Type: application/json
+
+{
+  "query": "mutation { deleteBook(id: \"647233a1de4979058d035fb7\") { id title author publicationYear genre isbn } }"
+}

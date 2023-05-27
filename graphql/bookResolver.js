@@ -1,23 +1,38 @@
+// Import necessary modules and dependencies
 const Book = require('../models/book');
-const { createRandomBook } = require('../controller/bookController');
+// const { createRandomBook } = require('../controller/bookController');
 const connectDB = require('../database/db');
 const { validationResult } = require('express-validator');
 const { ObjectId } = require('mongodb');
+const { ApolloError } = require("apollo-server-express");
 
+// Define the resolvers object
 const resolvers = {
     Query: {
+        // Resolver for the 'books' query
         books: async () => {
             try {
+                // Connect to the database and retrieve all books
                 const db = connectDB.getDb().db('Book-Manager'); // Replace with your database name
                 const books = await db.collection('books').find().toArray();
-                return books;
+                // Convert the MongoDB _id to a string and assign it to the id field for each book
+                const booksWithIdAsString = books.map(book => {
+                    book.id = book._id.toString();
+                    return book;
+                });
+
+                return booksWithIdAsString;
+
             } catch (error) {
                 console.error('Error retrieving books', error);
                 throw error;
             }
         },
+
+        // Resolver for the 'book' query
         book: async (_, { id }) => {
             try {
+                // Connect to the database and find a book by its ID
                 const db = connectDB.getDb().db('Book-Manager'); // Replace with your database name
                 const book = await db.collection('books').findOne({ _id: new ObjectId(id) });
                 if (!book) {
@@ -31,8 +46,11 @@ const resolvers = {
                 throw error;
             }
         },
+
+        // Resolver for the 'isAuthorized' query
         isAuthorized: async (_, __, { req }) => {
             try {
+                // Check if the user is authenticated
                 if (req.oidc.isAuthenticated()) {
                     return true;
                 } else {
@@ -44,17 +62,30 @@ const resolvers = {
         },
     },
     Mutation: {
-        createBook: async (parent, { title, author, publicationYear, genre, isbn }) => {
+        // Resolver for the 'createBook' mutation
+        createBook: async (parent, { title, author, publicationYear, genre, isbn }, { res }) => {
             console.log('Input:', { title, author, publicationYear, genre, isbn });
 
             // Validate the input data
             if (!title || !author || !publicationYear || !genre || !isbn) {
-                console.error('Incomplete book information');
-                throw new Error('Incomplete book information');
+                res.status(400); // Bad Request
+                throw new ApolloError('Incomplete book information', 'BAD_REQUEST');
+            }
+            // Perform validation
+            if (!title) {
+                throw new Error('Title is required');
+            }
+
+            if (!author) {
+                throw new Error('Author is required');
+            }
+
+            if (!publicationYear || publicationYear < 0) {
+                throw new Error('Invalid publication year');
             }
 
             try {
-                // Logic to create a new book in the database
+                // Create a new book in the database
                 const book = new Book({ title, author, publicationYear, genre, isbn });
                 console.log('New Book:', book);
 
@@ -64,67 +95,91 @@ const resolvers = {
                     .collection('books')
                     .insertOne(book, { maxTimeMS: 30000 });
 
-                console.log('Created Book:', newBook);
-                return newBook;
+                res.status(201); // Created
+                // Set the id field and return the created book
+                book.id = newBook.insertedId.toString();
+                return book;
             } catch (error) {
                 console.error('Error creating book', error);
-                throw new Error('Failed to create book');
+                res.status(500); // Internal Server Error
+                throw new ApolloError('Failed to create book', 'INTERNAL_SERVER_ERROR');
             }
         },
-        updateBook: async (parent, { id, title, author, publicationYear, genre, isbn }) => {
+
+        // Resolver for the 'updateBook' mutation
+        updateBook: async (parent, { id, title, author, publicationYear, genre, isbn }, { res }) => {
             // Validate the input data
-            // If validation fails, throw an error with appropriate message
+
             if (!id) {
-                throw new Error('Invalid book ID');
+                res.status(400); // Bad Request
+                throw new ApolloError('Invalid book ID', 'BAD_REQUEST');
             }
 
             try {
-                // Logic to update an existing book in the database
+                // Update an existing book in the database
                 const updatedBook = await Book.findByIdAndUpdate(
                     id,
                     { title, author, publicationYear, genre, isbn },
-                    { new: true }
+                    { new: true, timeout: 15000 }
                 );
 
                 if (!updatedBook) {
-                    throw new Error('Book not found');
+                    res.status(404); // Not Found
+                    throw new ApolloError('Book not found', 'NOT_FOUND');
                 }
-
+                res.status(200); // OK
                 return updatedBook;
             } catch (error) {
                 console.error('Error updating book', error);
-                throw new Error('Failed to update book');
+                res.status(500); // Internal Server Error
+                throw new ApolloError('Failed to update book');
             }
         },
-        deleteBook: async (parent, { id }) => {
+
+        // Resolver for the 'deleteBook' mutation
+        deleteBook: async (parent, { id }, { res }) => {
             try {
+                if (!res) {
+                    throw new Error("Response object not found");
+                }
+                // Delete a book from the database
                 const deletedBook = await connectDB
                     .getDb()
                     .db('Book-Manager')
                     .collection('books')
-                    .findOneAndDelete({ _id: new ObjectId(id) }, { maxTimeMS: 60000 });
+                    .findOneAndDelete({ _id: new ObjectId(id) }, { maxTimeMS: 30000 });
 
                 if (!deletedBook.value) {
-                    console.error('Book not found');
-                    throw new Error('Book not found');
+                    res.status(404); // Not Found
+                    throw new ApolloError('Book not found', 'NOT_FOUND');
                 }
 
+                res.status(200); // OK
                 console.log('Deleted Book:', deletedBook.value);
+
+                // Set the id field and return the deleted book
+                deletedBook.value.id = deletedBook.value._id.toString();
                 return deletedBook.value;
             } catch (error) {
                 console.error('Error deleting book', error);
-                throw new Error('Failed to delete book');
+                res.status(500); // Internal Server Error
+                throw new ApolloError('Failed to delete book', 'INTERNAL_SERVER_ERROR');
             }
         },
-        createRandomBook: async (_, __, { req, res }) => {
-            try {
-                const book = await createRandomBook(req, res);
-                return book;
-            } catch (error) {
-                console.error('Error creating random book', error);
-                throw error;
-            }
-        },
+
+        // Resolver for the 'createRandomBook' mutation
+        // createRandomBook: async (_, __, { req, res }) => {
+        //     try {
+        //         // Create a random book using the bookController's createRandomBook function
+        //         const book = await createRandomBook(req, res);
+        //         return book;
+        //     } catch (error) {
+        //         console.error('Error creating random book', error);
+        //         throw error;
+        //     }
+        // },
+
+        // Resolver for the 'saveUserData' mutation
         saveUserData: async (_, __, { req }) => {
             try {
                 // Validate user authentication
@@ -152,7 +207,7 @@ const resolvers = {
                     return user_data;
                 }
 
-                // if user didn't already exist, add user info to the database
+                // If the user doesn't already exist, add user info to the database
                 const response = await connectDB
                     .getDb()
                     .db('Book-Manager')
@@ -171,4 +226,5 @@ const resolvers = {
     },
 };
 
+// Export the resolvers object
 module.exports = resolvers;

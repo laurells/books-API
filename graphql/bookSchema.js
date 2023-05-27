@@ -1,5 +1,7 @@
+// Import the necessary module
 const { gql } = require("apollo-server-express");
 
+// Define the GraphQL schema using the gql template literal
 const typeDefs = gql`
   type Book {
     id: ID!
@@ -29,7 +31,7 @@ const typeDefs = gql`
       isbn: String!
     ): Book!
     updateBook(
-      id: ID!
+      id: ID
       title: String
       author: String
       publicationYear: Int
@@ -42,4 +44,5 @@ const typeDefs = gql`
   }
 `;
 
+// Export the GraphQL schema
 module.exports = typeDefs;

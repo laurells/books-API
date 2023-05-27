@@ -7,24 +7,15 @@ const router = require('./routes');
 // const { graphqlHTTP } = require('express-graphql');
 // const typeDefs = require('./graphql/bookSchema');
 // const resolvers  = require('./graphql/bookResolver');
-// const { auth } = require('express-openid-connect');
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// const config = {
-//   authRequired: false,
-//   auth0Logout: true,
-//   secret: process.env.SECRET,
-//   baseURL: process.env.BASEURL,
-//   clientID: process.env.CLIENTID,
-//   issuerBaseURL: process.env.ISSUER
-// };
+
 
 app.use(bodyParser.json());
-// app.use(auth(config))
 app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -51,11 +42,6 @@ connectDB((err) => {
     // Handle the error
     return;
   }
-
-  // Set up API routes
-  // app.use('/books', booksController);
-
-  // Set up GraphQL API
   setupGraphQL(app);
  
 
@@ -63,8 +49,6 @@ connectDB((err) => {
   setTimeout(() => {
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);
-      
-      // console.log(`GraphQL endpoint: http://localhost:${port}${server}`);
     });
   }, 2000); // Adjust the delay as needed
   
