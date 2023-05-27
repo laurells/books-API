@@ -1,14 +1,15 @@
+### GET ALL BOOKS
 GET http://localhost:3000/graphql?query={books{id title author publicationYear genre isbn}}
-###
+### GET BOOK BY ID
 GET http://localhost:3000/graphql?query=query($id: ID!){book(id: $id){id title author}}&variables={"id": "6468b40c269f04c2ffaea739"}
-###
+### CREATE BOOK
 POST http://localhost:3000/graphql
 Content-Type: application/json
 
 {
   "query": "mutation { createBook(title: \"New Book\", author: \"John Doe\", publicationYear: 2022, genre: \"Fiction\", isbn: \"123456789\") { id title author publicationYear genre isbn } }"
 }
-###
+### UPDATE BOOK
 POST http://localhost:3000/graphql
 Content-Type: application/json
 
@@ -17,7 +18,7 @@ Content-Type: application/json
 }
 
 
-### Render
+### DELETE BOOK
 POST http://localhost:3000/graphql
 Content-Type: application/json
 
