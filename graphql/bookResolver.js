@@ -3,7 +3,6 @@ const { createRandomBook } = require('../controller/bookController');
 const connectDB = require('../database/db');
 const { validationResult } = require('express-validator');
 const { ObjectId } = require('mongodb');
-// const { ObjectId } = require('mongodb');
 
 const resolvers = {
     Query: {
@@ -20,7 +19,12 @@ const resolvers = {
         book: async (_, { id }) => {
             try {
                 const db = connectDB.getDb().db('Book-Manager'); // Replace with your database name
-                const book = await db.collection('books').find({ id }).toArray();
+                const book = await db.collection('books').findOne({ _id: new ObjectId(id) });
+                if (!book) {
+                    throw new Error(`Book with ID ${id} not found`);
+                }
+                // Transform the MongoDB _id to a string and assign it to the id field
+                book.id = book._id.toString();
                 return book;
             } catch (error) {
                 console.error('Error retrieving book', error);
@@ -42,31 +46,31 @@ const resolvers = {
     Mutation: {
         createBook: async (parent, { title, author, publicationYear, genre, isbn }) => {
             console.log('Input:', { title, author, publicationYear, genre, isbn });
-            
+
             // Validate the input data
             if (!title || !author || !publicationYear || !genre || !isbn) {
-              console.error('Incomplete book information');
-              throw new Error('Incomplete book information');
+                console.error('Incomplete book information');
+                throw new Error('Incomplete book information');
             }
-          
+
             try {
-              // Logic to create a new book in the database
-              const book = new Book({ title, author, publicationYear, genre, isbn });
-              console.log('New Book:', book);
-          
-              const newBook = await connectDB
-                .getDb()
-                .db('Book-Manager')
-                .collection('books')
-                .insertOne(book, { maxTimeMS: 30000 });
-          
-              console.log('Created Book:', newBook);
-              return newBook;
+                // Logic to create a new book in the database
+                const book = new Book({ title, author, publicationYear, genre, isbn });
+                console.log('New Book:', book);
+
+                const newBook = await connectDB
+                    .getDb()
+                    .db('Book-Manager')
+                    .collection('books')
+                    .insertOne(book, { maxTimeMS: 30000 });
+
+                console.log('Created Book:', newBook);
+                return newBook;
             } catch (error) {
-              console.error('Error creating book', error);
-              throw new Error('Failed to create book');
+                console.error('Error creating book', error);
+                throw new Error('Failed to create book');
             }
-          },
+        },
         updateBook: async (parent, { id, title, author, publicationYear, genre, isbn }) => {
             // Validate the input data
             // If validation fails, throw an error with appropriate message
@@ -94,24 +98,24 @@ const resolvers = {
         },
         deleteBook: async (parent, { id }) => {
             try {
-              const deletedBook = await connectDB
-                .getDb()
-                .db('Book-Manager')
-                .collection('books')
-                .findOneAndDelete({ _id: new ObjectId(id) }, { maxTimeMS: 60000 });
-          
-              if (!deletedBook.value) {
-                console.error('Book not found');
-                throw new Error('Book not found');
-              }
-          
-              console.log('Deleted Book:', deletedBook.value);
-              return deletedBook.value;
+                const deletedBook = await connectDB
+                    .getDb()
+                    .db('Book-Manager')
+                    .collection('books')
+                    .findOneAndDelete({ _id: new ObjectId(id) }, { maxTimeMS: 60000 });
+
+                if (!deletedBook.value) {
+                    console.error('Book not found');
+                    throw new Error('Book not found');
+                }
+
+                console.log('Deleted Book:', deletedBook.value);
+                return deletedBook.value;
             } catch (error) {
-              console.error('Error deleting book', error);
-              throw new Error('Failed to delete book');
+                console.error('Error deleting book', error);
+                throw new Error('Failed to delete book');
             }
-          },
+        },
         createRandomBook: async (_, __, { req, res }) => {
             try {
                 const book = await createRandomBook(req, res);

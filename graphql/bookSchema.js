@@ -16,7 +16,7 @@ const typeDefs = gql`
 
   type Query {
     books: [Book!]!
-    book(id: ID!): Book
+    book(id: ID): Book
     isAuthorized: Boolean!
   }
 
@@ -36,7 +36,7 @@ const typeDefs = gql`
       genre: String
       isbn: String
     ): Book
-    deleteBook(id: ID!): Book
+    deleteBook(id: ID): Book
     createRandomBook: Book!
     saveUserData: User!
   }

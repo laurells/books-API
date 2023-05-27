@@ -1,9 +1,12 @@
 const express = require('express');
 const { connectDB } = require('./database/db');
-const { setupGraphQL, generateAPIDocs } = require('./graphql/graphqlServer');
+const { setupGraphQL } = require('./graphql/graphqlServer');
 const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
 const router = require('./routes');
+// const { graphqlHTTP } = require('express-graphql');
+// const typeDefs = require('./graphql/bookSchema');
+// const resolvers  = require('./graphql/bookResolver');
 // const { auth } = require('express-openid-connect');
 
 dotenv.config();
@@ -35,6 +38,11 @@ app.use((req, res, next) => {
 });
 
 app.use('/', router);
+// app.use('/graphql', graphqlHTTP({
+//   schema: typeDefs,
+//   rootValue: resolvers,
+//   graphiql: true  // Enable GraphiQL for testing the API
+// }));
 
 // Connect to MongoDB
 connectDB((err) => {
@@ -55,7 +63,6 @@ connectDB((err) => {
   setTimeout(() => {
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);
-      generateAPIDocs();
       
       // console.log(`GraphQL endpoint: http://localhost:${port}${server}`);
     });
