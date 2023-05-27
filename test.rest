@@ -23,5 +23,41 @@ POST http://localhost:3000/graphql
 Content-Type: application/json
 
 {
-  "query": "mutation { deleteBook(id: \"647233a1de4979058d035fb7\") { id title author publicationYear genre isbn } }"
+  "query": "mutation { deleteBook(id: \"6472498db20078291cc57d1f\") { id title author publicationYear genre isbn } }"
 }
+
+### RANDOM BOOK GENERATOR
+POST http://localhost:3000/book-generator
+
+### RENDER GET ALL BOOKS
+GET https://codewithrels.onrender.com/graphql?query={books{id title author publicationYear genre isbn}}
+### RENDER ENCODED LINK VIA RENDER
+GET https://codewithrels.onrender.com/graphql?query=%7Bbooks%7Bid%20title%20author%20publicationYear%20genre%20isbn%7D%7D
+### GET BOOKS BY ID VIA RENDER
+GET https://codewithrels.onrender.com/graphql?query=query($id: ID!){book(id: $id){id title author publicationYear genre isbn}}&variables={"id": "6468b40c269f04c2ffaea739"}
+### CREATE BOOK VIA RENDER
+POST https://codewithrels.onrender.com/graphql
+Content-Type: application/json
+
+{
+  "query": "mutation { createBook(title: \"New Book\", author: \"John Doe\", publicationYear: 2022, genre: \"Fiction\", isbn: \"123456789\") { id title author publicationYear genre isbn } }"
+}
+
+### UPDATE BOOK VIA RENDER
+POST https://codewithrels.onrender.com/graphql
+Content-Type: application/json
+
+{
+  "query": "mutation { updateBook(id: \"6468b40c269f04c2ffaea739\", title: \"Updated Book\", author: \"Jane Doe\") { id title author publicationYear genre isbn } }"
+}
+
+### DELETE BOOK VIA RENDER
+POST https://codewithrels.onrender.com/graphql
+Content-Type: application/json
+
+{
+  "query": "mutation { deleteBook(id: \"6472498db20078291cc57d1f\") { id title author publicationYear genre isbn } }"
+}
+
+### RANDOM BOOK GENERATOR VIA RENDER
+POST https://codewithrels.onrender.com/book-generator

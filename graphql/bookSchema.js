@@ -39,7 +39,6 @@ const typeDefs = gql`
       isbn: String
     ): Book
     deleteBook(id: ID): Book
-    createRandomBook: Book!
     saveUserData: User!
   }
 `;
