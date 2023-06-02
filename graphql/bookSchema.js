@@ -40,6 +40,12 @@ const typeDefs = gql`
     ): Book
     deleteBook(id: ID): Book
     saveUserData: User!
+    registerUser(username: String!, password: String!): User!
+    loginUser(username: String!, password: String!): Token!
+  }
+
+  type Token {
+    token: String!
   }
 `;
 

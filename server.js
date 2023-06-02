@@ -4,6 +4,8 @@ const { setupGraphQL } = require('./graphql/graphqlServer');
 const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
 const router = require('./routes');
+const oauthSetup = require('./oauthSetup');
+// const { Issuer } = require('openid-client');
 // const { graphqlHTTP } = require('express-graphql');
 // const typeDefs = require('./graphql/bookSchema');
 // const resolvers  = require('./graphql/bookResolver');
@@ -12,8 +14,6 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
-
-
 
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
@@ -29,6 +29,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/', router);
+app.use('/', oauthSetup); // Mount the OAuth2 routes
 // app.use('/graphql', graphqlHTTP({
 //   schema: typeDefs,
 //   rootValue: resolvers,

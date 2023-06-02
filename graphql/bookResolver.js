@@ -5,6 +5,9 @@ const connectDB = require('../database/db');
 const { validationResult } = require('express-validator');
 const { ObjectId } = require('mongodb');
 const { ApolloError } = require("apollo-server-express");
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const User = require('../models/user');
 
 // Define the resolvers object
 const resolvers = {
@@ -223,6 +226,58 @@ const resolvers = {
                 throw new Error(err.message);
             }
         },
+
+        registerUser: async (_, { username, password }) => {
+            try {
+              // Check if the user already exists
+              const existingUser = await User.findOne({ username });
+              if (existingUser) {
+                throw new Error('Username already exists');
+              }
+          
+              // Hash the password
+              const hashedPassword = await bcrypt.hash(password, 10);
+          
+              // Create a new user
+              const user = new User({
+                username,
+                password: hashedPassword,
+              });
+          
+              // Save the user to the database
+              await user.save();
+          
+              // Return the newly created user
+              return user;
+            } catch (error) {
+              console.error('Error registering user:', error);
+              throw new Error(error.message);
+            }
+          },
+
+          loginUser: async (_, { username, password }) => {
+            try {
+              // Find the user by username
+              const user = await User.findOne({ username });
+              if (!user) {
+                throw new Error('Invalid username or password');
+              }
+      
+              // Compare the provided password with the hashed password in the database
+              const isPasswordValid = await bcrypt.compare(password, user.password);
+              if (!isPasswordValid) {
+                throw new Error('Invalid username or password');
+              }
+      
+              // Generate a JSON Web Token (JWT) for authentication
+              const token = jwt.sign({ userId: user.id }, 'your_secret_key', { expiresIn: '1h' });
+      
+              // Return the token
+              return { token };
+            } catch (error) {
+              throw new Error(error.message);
+            }
+          },
     },
 };
 
