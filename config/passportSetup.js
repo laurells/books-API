@@ -6,14 +6,16 @@ const { AuthenticationError } = require('apollo-server-express');
 const dotenv = require('dotenv');
 
 dotenv.config();
-
+const clientID = process.env.CLIENTID;
+const clientSecret = process.env.CLIENTSECRET;
+const callbackURL = process.env.CALLBACKURL;
 // Configure passport to use Google OAuth2 strategy
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.CLIENTID,
-      clientSecret: process.env.CLIENTSECRET,
-      callbackURL: process.env.CALLBACKURL,
+      clientID,
+      clientSecret,
+      callbackURL,
     },
     (accessToken, refreshToken, profile, done) => {
       const { id, displayName, emails } = profile;
