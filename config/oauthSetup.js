@@ -1,11 +1,11 @@
-const { Router } = require('express');
+const express = require('express');
 const { Issuer } = require('openid-client');
-const { configureOAuth2Strategy, initializePassport, authenticateOAuth2, handleOAuth2Callback } = require('./config/passportSetup');
+const { configureOAuth2Strategy, initializePassport, authenticateOAuth2, handleOAuth2Callback } = require('./passportSetup');
 const dotenv = require('dotenv');
 
-dotenv.config()
+dotenv.config();
 
-const router = Router();
+const router = express.Router();
 
 const clientID = process.env.CLIENTID;
 const clientSecret = process.env.CLIENTSECRET;
@@ -21,14 +21,10 @@ initializePassport();
 // Set up routes for OAuth2 authentication
 router.get('/auth/oauth2', authenticateOAuth2({ scope: 'profile' }));
 
-router.get(
-  '/auth/oauth2/callback',
-  handleOAuth2Callback({ failureRedirect: '/login', successRedirect: '/profile' }),
-  (req, res) => {
-    // Redirect or respond to successful authentication
-    res.send({ message: 'Authentication successful' });
-  }
-);
+router.get('/auth/oauth2/callback', handleOAuth2Callback({ failureRedirect: '/login', successRedirect: '/profile' }), (req, res) => {
+  // Redirect or respond to successful authentication
+  res.send({ message: 'Authentication successful' });
+});
 
 router.get('/auth/callback', async (req, res) => {
   try {
@@ -45,7 +41,7 @@ router.get('/auth/callback', async (req, res) => {
     const { sub: userId, name: userName, email } = tokenSet.claims();
     console.log('User ID:', userId);
     console.log('Username:', userName);
-    console.log('User Email', email);
+    console.log('User Email:', email);
 
     // Perform further actions with the retrieved user information, such as storing it in a database or creating a user session
 

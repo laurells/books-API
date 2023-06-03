@@ -1,11 +1,14 @@
 // Import required dependencies and modules
+// const User = require('../models/user');
+const { ObjectId } = require('mongodb');
+const connectDB = require('../database/db');
 const express = require('express');
 const dotenv = require('dotenv');
 const { ApolloServer, UserInputError, AuthenticationError } = require('apollo-server-express');
 const { buildSubgraphSchema } = require('@apollo/federation');
 const { ApolloClient, InMemoryCache, HttpLink, gql } = require('@apollo/client');
 const { ApolloServerPluginInlineTraceDisabled } = require('apollo-server-core');
-const oauthSetup = require('./oauthSetup');
+const oauthSetup = require('../config/oauthSetup');
 const jwt = require('jsonwebtoken');
 const typeDefs = require('./bookSchema');
 const resolvers = require('./bookResolver');
@@ -19,17 +22,17 @@ const verifyToken = (token) => {
   }
 };
 const app = express();
-dotenv.config()
+dotenv.config();
 
 console.log('typeDefs:', typeDefs);
 console.log('resolvers:', resolvers);
 
 // Configure OAuth2 credentials (obtained from the Authorization Server)
-const clientId = process.env.CLIENTID;
-const clientSecret = process.env.CLIENTSECRET;
-const callbackURL = process.env.BASEURL;
+// const clientId = process.env.CLIENTID;
+// const clientSecret = process.env.CLIENTSECRET;
+// const callbackURL = process.env.BASEURL;
 
-oauthSetup.configureOAuth2Strategy(clientId, clientSecret, callbackURL);
+// oauthSetup.configureOAuth2Strategy(clientId, clientSecret, callbackURL);
 
 app.use('/', oauthSetup);
 // Create an instance of ApolloServer
@@ -58,7 +61,7 @@ const server = new ApolloServer({
   introspection: true,
 
   // Set up the context object with the request
-  context: ({ req }) => {
+  context: async ({ req }) => {
     // Get the token from the request headers
     const token = req.headers.authorization || '';
 
@@ -68,10 +71,13 @@ const server = new ApolloServer({
     // Extract the user ID from the decoded token
     const userId = decodedToken.userId;
 
-    // You can perform additional checks here, such as checking if the user exists in your database or if the token has the necessary permissions
+    // Retrieve user information from the database based on the user ID
+    const db = connectDB.getDb().db('Book-Manager'); // Replace with your database name
+    const user = await db.collection('books').findOne({ _id: new ObjectId(userId) });
+    // const user = await User.findById(userId);
 
-    // Add the user ID to the context object
-    return { userId };
+    // Add the user information to the context object
+    return { user };
   },
 });
 

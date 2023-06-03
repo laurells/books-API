@@ -14,7 +14,7 @@ const router = express.Router();
 // }));
 
 // Use the './swagger' module to handle requests to the root endpoint '/'
-router.use('/', require('./swagger'));
+// router.use('/', require('./swagger'));
 
 // Use the './books' module to handle requests to the '/books' endpoint
 router.use('/books', require('./book'));

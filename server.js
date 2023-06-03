@@ -4,7 +4,7 @@ const { setupGraphQL } = require('./graphql/graphqlServer');
 const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
 const router = require('./routes');
-const oauthSetup = require('./oauthSetup');
+// const oauthSetup = require('./oauthSetup');
 // const { Issuer } = require('openid-client');
 // const { graphqlHTTP } = require('express-graphql');
 // const typeDefs = require('./graphql/bookSchema');
@@ -29,7 +29,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/', router);
-app.use('/', oauthSetup); // Mount the OAuth2 routes
+// app.use('/', oauthSetup); // Mount the OAuth2 routes
 // app.use('/graphql', graphqlHTTP({
 //   schema: typeDefs,
 //   rootValue: resolvers,
