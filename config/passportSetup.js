@@ -7,7 +7,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 const clientID = process.env.CLIENTID;
-const clientSecret = process.env.CLIENTSECRET;
+const clientSecret = process.env.SECRET;
 const callbackURL = process.env.CALLBACKURL;
 // Configure passport to use Google OAuth2 strategy
 passport.use(
