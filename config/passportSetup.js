@@ -1,72 +1,68 @@
 const passport = require('passport');
-const OAuth2Strategy = require('passport-oauth2').Strategy;
+const { Strategy: GoogleStrategy } = require('passport-google-oauth20');
+const cookieSession = require('cookie-session');
+// const jwt = require('jsonwebtoken');
+const { AuthenticationError } = require('apollo-server-express');
+const dotenv = require('dotenv');
 
-const configureOAuth2Strategy = (clientId, clientSecret, callbackURL) => {
-  passport.use(
-    'oauth2',
-    new OAuth2Strategy(
-      {
-        authorizationURL: 'your_authorization_url', // Replace with your actual authorization URL
-        tokenURL: 'your_token_url', // Replace with your actual token URL
-        clientID: clientId,
-        clientSecret: clientSecret,
-        callbackURL: callbackURL,
-      },
-      async (accessToken, refreshToken, profile, done) => {
-        try {
-          // Assuming you have a User model for storing user data
-          const User = require('./models/User');
+dotenv.config();
 
-          // Find or create the user based on the profile information
-          const user = await User.findOne({ oauthId: profile.id });
+// Configure passport to use Google OAuth2 strategy
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.CLIENTID,
+      clientSecret: process.env.CLIENTSECRET,
+      callbackURL: process.env.CALLBACKURL,
+    },
+    (accessToken, refreshToken, profile, done) => {
+      const { id, displayName, emails } = profile;
+    
+      // Custom logic to handle user authentication and saving user information
+      // Replace this with your own implementation, e.g., saving the user to a database
+      const user = {
+        id,
+        name: displayName,
+        email: emails[0].value,
+      };
+    
+      done(null, user);
+    }
+    
+  )
+);
 
-          if (user) {
-            // User already exists, update the access token
-            user.accessToken = accessToken;
-            await user.save();
-            done(null, user);
-          } else {
-            // User doesn't exist, create a new user with the profile data
-            const newUser = new User({
-              oauthId: profile.id,
-              accessToken: accessToken,
-              // Extract other relevant data from the profile object
-              // For example:
-              name: profile.displayName,
-              email: profile.emails[0].value,
-            });
+// Serialize user into the session
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
 
-            await newUser.save();
-            done(null, newUser);
-          }
-        } catch (err) {
-          done(err);
-        }
-      }))
-};
+// Deserialize user from the session
+passport.deserializeUser((user, done) => {
+  done(null, user);
+});
 
-// Middleware to initialize Passport and session handling
-const initializePassport = () => {
-  // Initialize Passport
-  passport.initialize();
+// Middleware to check if the user is authenticated
+function authenticate(req, res, next) {
+  if (!req.user) {
+    throw new AuthenticationError('User not authenticated');
+  }
 
-  // Enable session handling
-  passport.session();
-};
+  next();
+}
 
-// Middleware to handle the OAuth2 authentication flow
-const authenticateOAuth2 = (options) => {
-  return passport.authenticate('oauth2', options);
-};
+// Middleware to initialize passport and session handling
+function initializePassport(app) {
+  app.use(cookieSession({
+    maxAge: 24 * 60 * 60 * 1000, // One day in milliseconds
+    keys: ['randomstringhere']
+  }));
 
-// Middleware to handle the OAuth2 callback
-const handleOAuth2Callback = (options) => {
-  return passport.authenticate('oauth2', options);
-};
+  app.use(passport.initialize());
+  app.use(passport.session());
+}
 
 module.exports = {
-  configureOAuth2Strategy,
   initializePassport,
-  authenticateOAuth2,
-  handleOAuth2Callback,
+  authenticate,
 };

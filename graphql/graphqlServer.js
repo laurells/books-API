@@ -1,19 +1,19 @@
 // Import required dependencies and modules
-// const User = require('../models/user');
 const { ObjectId } = require('mongodb');
 const connectDB = require('../database/db');
 const express = require('express');
 const dotenv = require('dotenv');
+const { initializePassport } = require('../config/passportSetup');
 const { ApolloServer, UserInputError, AuthenticationError } = require('apollo-server-express');
 const { buildSubgraphSchema } = require('@apollo/federation');
 const { ApolloClient, InMemoryCache, HttpLink, gql } = require('@apollo/client');
 const { ApolloServerPluginInlineTraceDisabled } = require('apollo-server-core');
-const oauthSetup = require('../config/oauthSetup');
 const jwt = require('jsonwebtoken');
 const typeDefs = require('./bookSchema');
 const resolvers = require('./bookResolver');
 const schema = buildSubgraphSchema([{ typeDefs, resolvers }]);
-const jwtSecret = 'your_jwt_secret'; // Replace with your JWT secret key
+dotenv.config();
+const jwtSecret = process.env.TOKEN; // Replace with your JWT secret key
 const verifyToken = (token) => {
   try {
     return jwt.verify(token, jwtSecret);
@@ -22,19 +22,10 @@ const verifyToken = (token) => {
   }
 };
 const app = express();
-dotenv.config();
 
-console.log('typeDefs:', typeDefs);
-console.log('resolvers:', resolvers);
+// Configure Passport.js
+initializePassport(app);
 
-// Configure OAuth2 credentials (obtained from the Authorization Server)
-// const clientId = process.env.CLIENTID;
-// const clientSecret = process.env.CLIENTSECRET;
-// const callbackURL = process.env.BASEURL;
-
-// oauthSetup.configureOAuth2Strategy(clientId, clientSecret, callbackURL);
-
-app.use('/', oauthSetup);
 // Create an instance of ApolloServer
 const server = new ApolloServer({
   // Build federated schema using type definitions and resolvers
@@ -107,7 +98,7 @@ makeGraphQLRequest();
 const setupGraphQL = async (app) => {
   try {
     await server.start();
-    server.applyMiddleware({ app });
+    server.applyMiddleware({ app, path: '/graphql', cors: false });
   } catch (error) {
     console.error('Failed to set up GraphQL server:', error);
   }
