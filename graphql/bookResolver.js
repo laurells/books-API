@@ -2,7 +2,6 @@ const Book = require('../models/book');
 const connectDB = require('../database/db');
 const { ObjectId } = require('mongodb');
 const { ApolloError, AuthenticationError, AuthorizationError } = require("apollo-server-express");
-const faker = require('faker');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
@@ -43,7 +42,7 @@ const resolvers = {
         }
 
         // Connect to the database and find a book by its ID
-        const db = connectDB.getDb().db('Book-Manager'); // Replace with your database name
+        const db = connectDB.getDb().db('Book-Manager'); 
         const book = await db.collection('books').findOne({ _id: new ObjectId(id) });
 
         if (!book) {
@@ -250,31 +249,37 @@ const resolvers = {
     },
 
 
-    registerFakeUser: async () => {
+    saveGoogleUser: async (_, { googleUser }) => {
       try {
-        const username = faker.internet.userName();
-        const existingUser = await User.findOne({ username });
-        if (existingUser) {
-          throw new ApolloError('Username already exists', 'USERNAME_EXISTS');
+        // Extract relevant information from the googleUser object
+        const { googleId, email, firstName, lastName } = googleUser;
+
+        // Check if the user already exists in the database
+        let user = await User.findOne({ googleId });
+
+        if (user) {
+          // User already exists, update the user's details
+          user.email = email;
+          user.firstName = firstName;
+          user.lastName = lastName;
+        } else {
+          // User doesn't exist, create a new user object
+          user = new User({
+            googleId,
+            email,
+            firstName,
+            lastName,
+          });
         }
 
-        const password = faker.internet.password();
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // Save the user object to the database
+        await connectDB.getDb().db('User-Management').collection('user_collection').insertOne(user, { maxTimeMS: 30000 });
 
-        const role = faker.random.arrayElement(['admin', 'librarian']);
-
-        const fakeUser = new User({
-          username,
-          password: hashedPassword,
-          role,
-        });
-
-        await connectDB.getDb().db('User-Management').collection('user_collection').insertOne(fakeUser, { maxTimeMS: 30000 });
-
-        return fakeUser;
+        // Return the saved user object
+        return user;
       } catch (error) {
-        console.error('Error registering user', error);
-        throw new ApolloError('Failed to register user', 'USER_REGISTRATION_ERROR');
+        console.error('Error saving Google user', error);
+        throw new ApolloError('Failed to save Google user', 'SAVE_USER_ERROR');
       }
     },
   },

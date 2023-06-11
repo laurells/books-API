@@ -3,7 +3,7 @@ const fetch = require('isomorphic-fetch');
 const { writeFileSync } = require('fs');
 const { join } = require('path');
 
-const endpoint = 'http://localhost:3000/graphql' && 'https://codewithrels.onrender.com/graphql';
+const endpoint = 'http://localhost:3000/graphql' || 'https://codewithrels.onrender.com/graphql';
 
 // Function to generate the API documentation
 async function generateAPIDocs() {

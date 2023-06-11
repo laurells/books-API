@@ -1,12 +1,13 @@
-const { ObjectId } = require('mongodb');
+// const { ObjectId } = require('mongodb');
 const { ApolloServer, UserInputError } = require('apollo-server-express');
 const { buildSubgraphSchema } = require('@apollo/federation');
-const { ApolloClient, InMemoryCache, HttpLink, gql } = require('@apollo/client');
+// const { ApolloClient, InMemoryCache, HttpLink, gql } = require('@apollo/client');
 const { ApolloServerPluginInlineTraceDisabled } = require('apollo-server-core');
 const connectDB = require('../database/db');
 const typeDefs = require('./bookSchema');
 const resolvers = require('./bookResolver');
-
+const { buildContext } = require('graphql-passport');
+const User = require('../models/user');
 
 // Create an instance of ApolloServer
 const server = new ApolloServer({
@@ -14,6 +15,13 @@ const server = new ApolloServer({
   schema: buildSubgraphSchema([{ typeDefs, resolvers }]),
   plugins: [
     ApolloServerPluginInlineTraceDisabled(),
+    // {
+    //   async requestDidStart({ context }) {
+    //     if (!context.user) {
+    //       throw new AuthenticationError('Unauthorized');
+    //     }
+    //   },
+    // },
   ],
 
   // Handle formatting of errors
@@ -38,46 +46,33 @@ const server = new ApolloServer({
 
   // Set up the context object with the request
   context: async ({ req }) => {
-    // Retrieve user information from the database based on the user ID
-    const db = connectDB.getDb().db('User-Management'); // Replace with your database name
-    const user = await db.collection('user_collection').findOne({ _id: new ObjectId(req.user.id) });
+    // Get the user ID from the request headers
+    const userId = req.headers.google_id || null;
 
-    // Add the user information to the context object
-    return { user };
-  },
-});
+    if (userId) {
+      // Find the user by ID in the database
+      const db = connectDB.getDb().db('User-Management'); 
+      const user = await db.collection('user_collection').findOne({ id: userId });
 
-// Create an instance of ApolloClient
-const client = new ApolloClient({
-  link: new HttpLink({ uri: 'http://localhost:3000/graphql' || 'https://codewithrels.onrender.com/graphql' }),
-  cache: new InMemoryCache(),
-});
+      if (user) {
+        // User exists in the database, add the user object to the context
+        return buildContext({ req, user });
+      } else {
+        // User doesn't exist in the database, create a new user
+        const newUser = new User({ id: userId, username: 'New User' });
+        await connectDB.getDb().db('User-Management').collection('user_collection').insertOne(newUser, { maxTimeMS: 30000 });
 
-// Function to make a GraphQL request using ApolloClient
-async function makeGraphQLRequest() {
-  const query = gql`
-  query IntrospectionQuery {
-    __schema {
-      types {
-        name
+        // Add the new user object to the context
+        return buildContext({ req, user: newUser });
       }
+    } else {
+      // No user ID provided, continue without a user object in the context
+      return buildContext({ req });
     }
-  }
-`;
+  },
 
-  try {
-    const response = await client.query({ query });
-    console.log('GraphQL Response:', response.data);
-  } catch (error) {
-    console.error('GraphQL Error:', error);
-  }
-}
+});
 
-// Call the function to make the GraphQL request
-makeGraphQLRequest();
-
-// Start the Apollo Server
-// Start the Apollo Server
 // Function to set up GraphQL server and apply it as middleware in Express app
 const setupGraphQL = async (app) => {
   try {
@@ -90,5 +85,5 @@ const setupGraphQL = async (app) => {
 };
 
 module.exports = {
-  setupGraphQL
+  setupGraphQL,
 };

@@ -15,6 +15,10 @@ const typeDefs = gql`
     username: String!
     password: String!
     role: UserRole!
+    googleId: String
+    email: String
+    firstName: String
+    lastName: String
   }
 
   enum UserRole {
@@ -48,11 +52,18 @@ const typeDefs = gql`
     ): Book
     deleteBook(id: ID): Book
     registerUser(username: String!, password: String!): User
-    registerFakeUser(username: String!, password: String!): User
+    saveGoogleUser(googleUser: GoogleUserInput!): User
   }
 
   type Token {
     token: String!
+  }
+
+  input GoogleUserInput {
+    googleId: String!
+    email: String!
+    firstName: String!
+    lastName: String!
   }
 `;
 
