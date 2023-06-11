@@ -10,10 +10,10 @@ dotenv.config();
 
 const resolvers = {
   Query: {
-    books: async (_, __, { user }) => {
+    books: async (_, __, { isAuth }) => {
       try {
         // Check if the user is authenticated
-        if (!user) {
+        if (!isAuth) {
           throw new AuthenticationError('Unauthorized');
         }
 
@@ -30,14 +30,14 @@ const resolvers = {
         return booksWithIdAsString;
       } catch (error) {
         console.error('Error retrieving books', error);
-        throw new ApolloError('Failed to retrieve books', 'BOOKS_RETRIEVAL_ERROR');
+        throw new ApolloError('Failed to retrieve books. Database connection failed', 'BOOKS_RETRIEVAL_ERROR');
       }
     },
 
-    book: async (_, { id }, { user }) => {
+    book: async (_, { id }, { isAuth }) => {
       try {
         // Check if the user is authenticated
-        if (!user) {
+        if (!isAuth) {
           throw new AuthenticationError('Unauthorized');
         }
 
@@ -54,14 +54,14 @@ const resolvers = {
         return book;
       } catch (error) {
         console.error('Error retrieving book', error);
-        throw new ApolloError('Failed to retrieve book', 'BOOK_RETRIEVAL_ERROR');
+        throw new ApolloError('Failed to retrieve book. Database connection failed', 'BOOK_RETRIEVAL_ERROR');
       }
     },
 
-    isAuthorized: async (_, __, { user }) => {
+    isAuthorized: async (_, __, { isAuth }) => {
       try {
         // Check if the user is authenticated
-        return !!user;
+        return !!isAuth;
       } catch (error) {
         console.error('Error checking authorization', error);
         throw new ApolloError('Failed to check authorization', 'AUTHORIZATION_ERROR');
@@ -88,7 +88,7 @@ const resolvers = {
         // Return the token
         return { token };
       } catch (error) {
-        throw new ApolloError('Failed to log in', 'LOGIN_ERROR');
+        throw new ApolloError('Failed to log in. Database connection failed', 'LOGIN_ERROR');
       }
     },
 
@@ -105,10 +105,10 @@ const resolvers = {
   },
 
   Mutation: {
-    createBook: async (_, { title, author, publicationYear, genre, isbn }, { user }) => {
+    createBook: async (_, { title, author, publicationYear, genre, isbn }, { isAuth }) => {
       try {
         // Check if the user is authenticated
-        if (!user) {
+        if (!isAuth) {
           throw new AuthenticationError('Unauthorized');
         }
 
@@ -139,7 +139,7 @@ const resolvers = {
         return book;
       } catch (error) {
         console.error('Error creating book', error);
-        throw new ApolloError('Failed to create book', 'BOOK_CREATION_ERROR');
+        throw new ApolloError('Failed to create book. Database connection failed', 'BOOK_CREATION_ERROR');
       }
     },
 
@@ -180,7 +180,7 @@ const resolvers = {
         return updatedBook;
       } catch (error) {
         console.error('Error updating book', error);
-        throw new ApolloError('Failed to update book', 'BOOK_UPDATE_ERROR');
+        throw new ApolloError('Failed to update book. Database connection failed', 'BOOK_UPDATE_ERROR');
       }
     },
 
@@ -212,7 +212,7 @@ const resolvers = {
         return deletedBook.value;
       } catch (error) {
         console.error('Error deleting book', error);
-        throw new ApolloError('Failed to delete book', 'BOOK_DELETION_ERROR');
+        throw new ApolloError('Failed to delete book. Database connection failed', 'BOOK_DELETION_ERROR');
       }
     },
 
@@ -244,7 +244,7 @@ const resolvers = {
         return user;
       } catch (error) {
         console.error('Error registering user', error);
-        throw new ApolloError('Failed to register user', 'USER_REGISTRATION_ERROR');
+        throw new ApolloError('Failed to register user. Database connection failed', 'USER_REGISTRATION_ERROR');
       }
     },
 
@@ -279,7 +279,7 @@ const resolvers = {
         return user;
       } catch (error) {
         console.error('Error saving Google user', error);
-        throw new ApolloError('Failed to save Google user', 'SAVE_USER_ERROR');
+        throw new ApolloError('Failed to save Google user. Database connection failed', 'SAVE_USER_ERROR');
       }
     },
   },

@@ -35,10 +35,10 @@
     "express-validator": "^7.0.1",
     "fs": "^0.0.1-security",
     "graphql": "^16.6.0",
-    "graphql-passport": "^0.6.5",
     "graphql-tools": "^9.0.0",
     "isomorphic-fetch": "^3.0.0",
     "jsonwebtoken": "^9.0.0",
+    "jwt-redis": "^7.0.3",
     "mongodb": "^5.5.0",
     "mongoose": "^7.2.0",
     "openid-client": "^5.4.2",
@@ -46,8 +46,7 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-oauth2": "^1.7.0",
     "path": "^0.12.7",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "redis": "^4.6.7",
     "swagger-ui-express": "^4.6.3"
   },
   "devDependencies": {

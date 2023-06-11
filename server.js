@@ -6,6 +6,7 @@ const bodyParser = require('body-parser');
 const passport = require('passport');
 const session = require('express-session');
 const { Strategy: OAuth2Strategy } = require('passport-oauth2');
+const jwtAuthMiddleware = require('./graphql/jwtAuthMiddleware');
 
 dotenv.config();
 
@@ -82,6 +83,10 @@ connectDB((err) => {
     // Handle the error
     return;
   }
+
+  // Apply the authentication middleware for all incoming requests
+  app.use(jwtAuthMiddleware);
+
   setupGraphQL(app);
 
   // Define routes for OAuth authentication
