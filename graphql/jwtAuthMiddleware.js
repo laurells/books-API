@@ -1,32 +1,34 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/user');
-const { ApolloError } = require('apollo-server-express');
+const redis = require('redis');
+const JWTR = require('jwt-redis').default;
+const redisClient = redis.createClient();
+const jwtr = new JWTR(redisClient);
 
-const jwtAuthMiddleware = async (req) => {
-  const authHeader = req.headers.authorization;
+const jwtAuthMiddleware = (req, res, next) => {
+  const token = req.header('auth-token');
 
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1];
-
-    try {
-      // Verify the JWT token
-      const decodedToken = jwt.verify(token, process.env.TOKEN);
-      const userId = decodedToken.userId;
-
-      // Find the user by the decoded user ID
-      const user = await User.findById(userId);
-
-      if (!user) {
-        throw new ApolloError('User not found', 'USER_NOT_FOUND');
-      }
-
-      req.user = user;
-      req.isAuth = true;
-    } catch (error) {
-      req.isAuth = false;
-    }
-  } else {
+  // IN CASE THE TOKEN DOESN'T EXIST
+  if (!token || token === '') {
     req.isAuth = false;
+    next(); // Call the next middleware or route handler
+    return;
+  }
+
+  try {
+    jwtr.verify(token, process.env.SECRET_TOKEN)
+      .then(verified => {
+        // IN CASE TOKEN EXISTS AND VALID
+        req.user = verified;
+        req.isAuth = true;
+        next(); // Call the next middleware or route handler
+      })
+      .catch(() => {
+        // IN CASE TOKEN EXISTS BUT INVALID
+        req.isAuth = false;
+        next(); // Call the next middleware or route handler
+      });
+  } catch (err) {
+    req.isAuth = false;
+    next(); // Call the next middleware or route handler
   }
 };
 
