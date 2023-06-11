@@ -11,8 +11,9 @@ const typeDefs = gql`
   }
 
   type User {
-    user_id: ID!
+    id: ID!
     username: String!
+    password: String!
     role: UserRole!
   }
 
@@ -25,6 +26,8 @@ const typeDefs = gql`
     books: [Book!]!
     book(id: ID): Book
     isAuthorized: Boolean!
+    loginUser(username: String!, password: String!): Token!
+    logout: String
   }
 
   type Mutation {
@@ -45,7 +48,7 @@ const typeDefs = gql`
     ): Book
     deleteBook(id: ID): Book
     registerUser(username: String!, password: String!): User
-    loginUser(username: String!, password: String!): Token!
+    registerFakeUser(username: String!, password: String!): User
   }
 
   type Token {

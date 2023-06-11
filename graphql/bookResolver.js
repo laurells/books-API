@@ -1,11 +1,13 @@
-// Import necessary modules and dependencies
 const Book = require('../models/book');
 const connectDB = require('../database/db');
 const { ObjectId } = require('mongodb');
 const { ApolloError, AuthenticationError, AuthorizationError } = require("apollo-server-express");
+const faker = require('faker');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const dotenv = require('dotenv');
+dotenv.config();
 
 const resolvers = {
   Query: {
@@ -66,6 +68,41 @@ const resolvers = {
         throw new ApolloError('Failed to check authorization', 'AUTHORIZATION_ERROR');
       }
     },
+
+    loginUser: async (_, { username, password }) => {
+      try {
+        // Find the user by username
+        const user = await User.findOne({ username });
+        if (!user) {
+          throw new ApolloError('Invalid username or password', 'INVALID_CREDENTIALS');
+        }
+
+        // Compare the provided password with the hashed password in the database
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+          throw new ApolloError('Invalid username or password', 'INVALID_CREDENTIALS');
+        }
+
+        // Generate a JSON Web Token (JWT) for authentication
+        const token = jwt.sign({ userId: user.id }, process.env.TOKEN, { expiresIn: '1h' });
+
+        // Return the token
+        return { token };
+      } catch (error) {
+        throw new ApolloError('Failed to log in', 'LOGIN_ERROR');
+      }
+    },
+
+    logout: async (_, __, { req }) => {
+      if (!req.user) {
+        return "Already logged out";
+      }
+
+      // Clear the session data
+      req.session.destroy();
+
+      return "Logged out successfully";
+    },
   },
 
   Mutation: {
@@ -108,46 +145,46 @@ const resolvers = {
     },
 
     updateBook: async (_, { id, title, author, publicationYear, genre, isbn }, { user }) => {
-        try {
-          // Check if the user is authenticated
-          if (!user) {
-            throw new AuthenticationError('Unauthorized');
-          }
-      
-          // Check if the user is authorized (admin or librarian)
-          if (user.role !== 'admin') {
-            throw new AuthorizationError('Not authorized to update a book');
-          }
-      
-          // Validate the input data
-          if (!id) {
-            throw new ApolloError('Invalid book ID', 'BAD_REQUEST');
-          }
-      
-          // Retrieve the existing book from the database
-          const existingBook = await Book.findById(id);
-      
-          if (!existingBook) {
-            throw new ApolloError('Book not found', 'NOT_FOUND');
-          }
-      
-          // Update the book fields
-          existingBook.title = title;
-          existingBook.author = author;
-          existingBook.publicationYear = publicationYear;
-          existingBook.genre = genre;
-          existingBook.isbn = isbn;
-      
-          // Save the updated book to the database
-          const updatedBook = await existingBook.save();
-      
-          return updatedBook;
-        } catch (error) {
-          console.error('Error updating book', error);
-          throw new ApolloError('Failed to update book', 'BOOK_UPDATE_ERROR');
+      try {
+        // Check if the user is authenticated
+        if (!user) {
+          throw new AuthenticationError('Unauthorized');
         }
-      },
-      
+
+        // Check if the user is authorized (admin or librarian)
+        if (user.role !== 'admin') {
+          throw new AuthorizationError('Not authorized to update a book');
+        }
+
+        // Validate the input data
+        if (!id) {
+          throw new ApolloError('Invalid book ID', 'BAD_REQUEST');
+        }
+
+        // Retrieve the existing book from the database
+        const existingBook = await Book.findById(id);
+
+        if (!existingBook) {
+          throw new ApolloError('Book not found', 'NOT_FOUND');
+        }
+
+        // Update the book fields
+        existingBook.title = title;
+        existingBook.author = author;
+        existingBook.publicationYear = publicationYear;
+        existingBook.genre = genre;
+        existingBook.isbn = isbn;
+
+        // Save the updated book to the database
+        const updatedBook = await existingBook.save();
+
+        return updatedBook;
+      } catch (error) {
+        console.error('Error updating book', error);
+        throw new ApolloError('Failed to update book', 'BOOK_UPDATE_ERROR');
+      }
+    },
+
 
     deleteBook: async (_, { id }, { user }) => {
       try {
@@ -180,55 +217,64 @@ const resolvers = {
       }
     },
 
-    registerUser: async (_, { input }) => {
-        try {
-          // Check if the user already exists
-          const existingUser = await User.findOne({ username: input.username });
-          if (existingUser) {
-            throw new ApolloError('Username already exists', 'USERNAME_EXISTS');
-          }
-  
-          // Hash the password
-          const hashedPassword = await bcrypt.hash(input.password, 10);
-  
-          // Create a new user
-          const user = new User({
-            username: input.username,
-            password: hashedPassword,
-            role: input.role,
-          });
-  
-          // Save the user to the database
-          await user.save();
-  
-          return user;
-        } catch (error) {
-          console.error('Error registering user', error);
-          throw new ApolloError('Failed to register user', 'USER_REGISTRATION_ERROR');
-        }
-      },
-
-    loginUser: async (_, { username, password }) => {
+    registerUser: async (_, { username, password, role }) => {
       try {
-        // Find the user by username
-        const user = await User.findOne({ username });
-        if (!user) {
-          throw new ApolloError('Invalid username or password', 'INVALID_CREDENTIALS');
+        // Check if the user already exists
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+          throw new ApolloError('Username already exists', 'USERNAME_EXISTS');
         }
 
-        // Compare the provided password with the hashed password in the database
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-          throw new ApolloError('Invalid username or password', 'INVALID_CREDENTIALS');
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        if (role !== 'admin' && role !== 'librarian') {
+          throw new ApolloError('Invalid role', 'INVALID_ROLE');
         }
 
-        // Generate a JSON Web Token (JWT) for authentication
-        const token = jwt.sign({ userId: user.id }, 'your_secret_key', { expiresIn: '1h' });
+        // Create a new user
+        const user = new User({
+          username,
+          password: hashedPassword,
+          role,
+        });
 
-        // Return the token
-        return { token };
+        // Save the user to the database
+        await connectDB.getDb().db('User-Management').collection('user_collection').insertOne(user, { maxTimeMS: 30000 });
+
+        return user;
       } catch (error) {
-        throw new ApolloError('Failed to log in', 'LOGIN_ERROR');
+        console.error('Error registering user', error);
+        throw new ApolloError('Failed to register user', 'USER_REGISTRATION_ERROR');
+      }
+    },
+
+
+    registerFakeUser: async () => {
+      try {
+        const username = faker.internet.userName();
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+          throw new ApolloError('Username already exists', 'USERNAME_EXISTS');
+        }
+
+        const password = faker.internet.password();
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const role = faker.random.arrayElement(['admin', 'librarian']);
+
+        const fakeUser = new User({
+          username,
+          password: hashedPassword,
+          role,
+        });
+
+        await connectDB.getDb().db('User-Management').collection('user_collection').insertOne(fakeUser, { maxTimeMS: 30000 });
+
+        return fakeUser;
+      } catch (error) {
+        console.error('Error registering user', error);
+        throw new ApolloError('Failed to register user', 'USER_REGISTRATION_ERROR');
       }
     },
   },

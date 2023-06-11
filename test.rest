@@ -9,6 +9,7 @@ Content-Type: application/json
 {
   "query": "mutation { createBook(title: \"New Book\", author: \"John Doe\", publicationYear: 2022, genre: \"Fiction\", isbn: \"123456789\") { id title author publicationYear genre isbn } }"
 }
+
 ### UPDATE BOOK
 POST http://localhost:3000/graphql
 Content-Type: application/json
@@ -28,6 +29,21 @@ Content-Type: application/json
 
 ### RANDOM BOOK GENERATOR
 POST http://localhost:3000/book-generator
+### REGISTER A USER
+POST http://localhost:3000/graphql
+Content-Type: application/json
+
+{
+  "query": "mutation { registerFakeUser { user_id username password role } }"
+}
+### REGISTER
+POST http://localhost:3000/graphql
+Content-Type: application/json
+
+{
+  "query": "mutation { registerUser(username: \"johnny_gold\",  password: \"pa55W@rd\", role: \"LIBARIAN\") { id username password role } }"
+}
+
 
 ### RENDER GET ALL BOOKS
 GET https://codewithrels.onrender.com/graphql?query={books{id title author publicationYear genre isbn}}

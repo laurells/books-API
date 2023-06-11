@@ -1,36 +1,20 @@
-// Import required dependencies and modules
 const { ObjectId } = require('mongodb');
-const connectDB = require('../database/db');
-const express = require('express');
-const dotenv = require('dotenv');
-const { initializePassport } = require('../config/passportSetup');
-const { ApolloServer, UserInputError, AuthenticationError } = require('apollo-server-express');
+const { ApolloServer, UserInputError } = require('apollo-server-express');
 const { buildSubgraphSchema } = require('@apollo/federation');
 const { ApolloClient, InMemoryCache, HttpLink, gql } = require('@apollo/client');
 const { ApolloServerPluginInlineTraceDisabled } = require('apollo-server-core');
-const jwt = require('jsonwebtoken');
+const connectDB = require('../database/db');
 const typeDefs = require('./bookSchema');
 const resolvers = require('./bookResolver');
-const schema = buildSubgraphSchema([{ typeDefs, resolvers }]);
-dotenv.config();
-const jwtSecret = process.env.TOKEN; // Replace with your JWT secret key
-const verifyToken = (token) => {
-  try {
-    return jwt.verify(token, jwtSecret);
-  } catch (error) {
-    throw new AuthenticationError('Invalid or expired token');
-  }
-};
-const app = express();
 
-// Configure Passport.js
-initializePassport(app);
 
 // Create an instance of ApolloServer
 const server = new ApolloServer({
   // Build federated schema using type definitions and resolvers
-  schema,
-  plugins: [ApolloServerPluginInlineTraceDisabled()],
+  schema: buildSubgraphSchema([{ typeDefs, resolvers }]),
+  plugins: [
+    ApolloServerPluginInlineTraceDisabled(),
+  ],
 
   // Handle formatting of errors
   formatError: (error) => {
@@ -50,22 +34,13 @@ const server = new ApolloServer({
   // Disable persisted queries
   persistedQueries: false,
   introspection: true,
+  playground: true,
 
   // Set up the context object with the request
   context: async ({ req }) => {
-    // Get the token from the request headers
-    const token = req.headers.authorization || '';
-
-    // Verify and decode the token
-    const decodedToken = verifyToken(token);
-
-    // Extract the user ID from the decoded token
-    const userId = decodedToken.userId;
-
     // Retrieve user information from the database based on the user ID
-    const db = connectDB.getDb().db('Book-Manager'); // Replace with your database name
-    const user = await db.collection('books').findOne({ _id: new ObjectId(userId) });
-    // const user = await User.findById(userId);
+    const db = connectDB.getDb().db('User-Management'); // Replace with your database name
+    const user = await db.collection('user_collection').findOne({ _id: new ObjectId(req.user.id) });
 
     // Add the user information to the context object
     return { user };
@@ -74,35 +49,46 @@ const server = new ApolloServer({
 
 // Create an instance of ApolloClient
 const client = new ApolloClient({
-  link: new HttpLink({ uri: 'http://localhost:3000/graphql' || 'https://codewithrels.onrender.com/graphql' }), 
+  link: new HttpLink({ uri: 'http://localhost:3000/graphql' || 'https://codewithrels.onrender.com/graphql' }),
   cache: new InMemoryCache(),
 });
 
+// Function to make a GraphQL request using ApolloClient
 async function makeGraphQLRequest() {
-  const query = gql`{
-    __typename
-  }`;
+  const query = gql`
+  query IntrospectionQuery {
+    __schema {
+      types {
+        name
+      }
+    }
+  }
+`;
 
   try {
     const response = await client.query({ query });
-    console.log(response.data);
+    console.log('GraphQL Response:', response.data);
   } catch (error) {
-    console.error(error);
+    console.error('GraphQL Error:', error);
   }
 }
 
 // Call the function to make the GraphQL request
 makeGraphQLRequest();
 
+// Start the Apollo Server
+// Start the Apollo Server
 // Function to set up GraphQL server and apply it as middleware in Express app
 const setupGraphQL = async (app) => {
   try {
     await server.start();
-    server.applyMiddleware({ app, path: '/graphql', cors: false });
+    server.applyMiddleware({ app, path: '/graphql', cors: true });
   } catch (error) {
     console.error('Failed to set up GraphQL server:', error);
+    process.exit(1); // Exit the process with an error status
   }
 };
 
-// Export the setupGraphQL function
-module.exports = { setupGraphQL };
+module.exports = {
+  setupGraphQL
+};

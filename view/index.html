@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login/Register</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Login/Register</h1>
+    <form id="login-form">
+      <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <div class="form-group">
+        <label for="role">Role:</label>
+        <div>
+          <input type="radio" id="admin" name="role" value="ADMIN" required>
+          <label for="admin">Admin</label>
+        </div>
+        <div>
+          <input type="radio" id="librarian" name="role" value="LIBRARIAN" required>
+          <label for="librarian">Librarian</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <button type="button" id="login-button">Login</button> <br><br>
+        <button type="button" id="register-button">Register</button>
+        <button type="button" id="logout-button" style="display: none;">Logout</button>        
+      </div>
+      <div id="error-message" class="error-message"></div>
+    </form>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
